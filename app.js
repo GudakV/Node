@@ -1,27 +1,134 @@
-const fs = require('node:fs/promises');
-const path = require('node:path');
+// EVENTS
+// const events = require('node:events');
+//
+// const eventEmitter = new events();
+//
+// eventEmitter.on('click', (data)=>{
+//   console.log(data)
+//   console.log('Click click click');
+// })
+//
+// eventEmitter.emit('click', { data: "Hello" });
+// eventEmitter.emit('click');
+// eventEmitter.emit('click');
+// eventEmitter.emit('click');
+// eventEmitter.emit('click');
+//
+// console.log(eventEmitter.eventNames());
+//
+// eventEmitter.once('clickAndDie', ()=>{
+//   console.log('Clicked and died');
+// })
+//
+// console.log(eventEmitter.eventNames());
+//
+// eventEmitter.emit('clickAndDie');
+// eventEmitter.emit('clickAndDie');
+// eventEmitter.emit('clickAndDie');
+// eventEmitter.emit('clickAndDie');
+//
+// console.log(eventEmitter.eventNames());
+//
+// const fs = require('fs');
+//
+// const readStream = fs.createReadStream('text.txt');
+// const writeStream = fs.createWriteStream('text2.txt');
+//
+// readStream.on('data', (chunk)=>{
+//   console.log(chunk);
+//   writeStream.write(chunk)
+// })
+//
+// readStream
+//   .on('error', ()=>{
+//     readStream.destroy();
+//     writeStream.end('ERROR ON READING FILE');
+//
+//     // handle error
+//   })
+//   .pipe(writeStream)
+//
+// read, write, duplex, transform - !!!
+
+const express = require('express')
+
+const users = [
+  {
+    name: 'Oleh',
+    age: 20,
+    gender: 'male'
+  },
+  {
+    name: 'Anton',
+    age: 10,
+    gender: 'male'
+  },
+  {
+    name: 'Inokentiy',
+    age: 25,
+    gender: 'female'
+  },
+  {
+    name: 'Anastasiya',
+    age: 15,
+    gender: 'female'
+  },
+  {
+    name: 'Cocos',
+    age: 25,
+    gender: 'other',
+  },
+]
+
+const app = express();
 
 
-const foo = async () => {
-    const basePath = path.join(process.cwd(), 'baseFolder');
+app.use(express.json());
+app.use(express.urlencoded({extended: true}))
 
-    await fs.mkdir(basePath, {recursive: true});
-    const fileNames = ['file1.txt', 'file2.txt', 'file3.txt', 'file4.txt', 'file5.txt', 'file6.txt'];
-    const folderNames = ['folder1', 'folder2', 'folder3', 'folder4'];
+// CRUD - create, read, update, delete
 
-    await Promise.all(folderNames.map(async (folder) => {
-        const folderPath = path.join(basePath, folder);
-        await fs.mkdir(folderPath, {recursive: true});
+app.get('/users', (req, res) => {
+  res.status(200).json(users)
+})
 
-        await Promise.allSettled(fileNames.map(async (file) => {
-            await fs.writeFile(path.join(folderPath, file), 'HELLO');
-        }));
-    }));
+app.get('/users/:id', (req, res) => {
+  const { id } = req.params;
 
-    const files = await fs.readdir(basePath);
-    for (const file of files) {
-        const stat = await fs.stat(path.join(basePath, file));
-        console.log(path.join(basePath, file), ' : ', stat.isDirectory() ? 'folder' : 'file');
-    }
-}
-foo();
+  res.status(200).json(users[+id]);
+})
+
+app.post('/users', (req, res)=>{
+  users.push(req.body);
+
+  res.status(201).json({
+    message: "User created."
+  });
+})
+
+app.put('/users/:id', (req, res)=>{
+  const { id } = req.params;
+
+  users[+id] = req.body;
+
+  res.status(200).json({
+    message: 'User updated',
+    data: users[+id],
+  })
+})
+
+app.delete('/users/:id', (req, res)=>{
+  const { id } = req.params;
+
+  users.splice(+id, 1);
+
+  res.status(200).json({
+    message: 'User deleted',
+  })
+})
+
+const PORT = 5001;
+
+app.listen(PORT, () => {
+  console.log(`Server has started on PORT ${PORT} 🥸`)
+})
